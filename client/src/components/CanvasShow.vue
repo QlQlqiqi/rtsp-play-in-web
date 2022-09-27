@@ -133,7 +133,10 @@ export default {
     },
     saveVideo() {
       const stream = this.canvas.captureStream();
-      const recorder = new MediaRecorder(stream, { mimeType: "video/webm" });
+      const recorder = new MediaRecorder(stream, {
+        mimeType: "video/webm",
+        videoBitsPerSecond: 1024 * 1024 * 10,
+      });
       const data = [];
       recorder.ondataavailable = function (event) {
         if (event.data && event.data.size) {
@@ -141,7 +144,7 @@ export default {
         }
       };
       recorder.onstop = () => {
-        saveAs(new Blob(data, { type: "video/webm" }), "1.mp4")
+        saveAs(new Blob(data, { type: "video/webm " }), "1.mp4");
       };
       recorder.start();
       setTimeout(() => {

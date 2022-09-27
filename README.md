@@ -1,3 +1,5 @@
+> 左键暂停播放，中键下载视频，右键保存图片
+
 采集摄像头（麦克风）数据，通过 ffmpeg 转化为 rtsp 流，然后 easyDarwin 将其推送，rtsp 服务器拉流并与 client 建立 websocket，实时发送拉流数据。
 
 ##### 1. 启动 rtsp 拉流服务器

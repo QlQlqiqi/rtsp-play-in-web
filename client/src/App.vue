@@ -8,11 +8,7 @@
         :rtsp-data="rtspData[index]"
       ></CanvasShow>
     </div>
-    <div id="right-wrap">
-      <div id="videoContainer">
-        <video></video>
-      </div>
-    </div>
+    <div id="right-wrap"></div>
   </div>
 </template>
 
