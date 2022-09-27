@@ -54,11 +54,11 @@ app.post("/startRtspVideo", function (req, res) {
   }
 
   // 已存在
-  // if (playList[port] && playList[port].url == url) {
-  //   playList[port].date = new Date().getTime();
-  //   res.send({ result: success, ws: "ws://" + IP + ":" + port });
-  //   return;
-  // }
+  if (playList[port] && playList[port].url == url) {
+    playList[port].date = new Date().getTime();
+    res.send({ result: success, ws: "ws://" + IP + ":" + port });
+    return;
+  }
   // 如果该 websocket 已存在，则关闭
 
   playStream[port] &&
@@ -72,6 +72,7 @@ app.post("/startRtspVideo", function (req, res) {
   playStream[port] = new Stream({ url, wsPort: port });
   playStream[port].date = new Date().getTime();
   playStream[port].start();
+  console.log("stream start: " + "ws://" + IP + ":" + port);
   res.send({ result: success, ws: "ws://" + IP + ":" + port });
 });
 
@@ -84,24 +85,26 @@ app.post("/heartBeats", function (req, res) {
     res.send({ result: error });
     return;
   }
-  if(playList[port])
-  // 重置时间
-  if (playList[port] && playList[port].url == url) {
-    playList[port].date = new Date().getTime();
-    res.send({ result: success, ws: "ws://" + IP + ":" + port });
-    return;
-  }
+  if (playList[port])
+    if (playList[port] && playList[port].url == url) {
+      // 重置时间
+      playList[port].date = new Date().getTime();
+      res.send({ result: success, ws: "ws://" + IP + ":" + port });
+      return;
+    }
 });
 
 // 定期清理那些超时客户端
 setInterval(() => {
-  const date = new Date().getTime();
-  for (let key in playList) {
-    if (date - playList[key].date > timeout) {
-      delete playList[key];
-      playStream[key] &&
-        typeof playStream[key].stop == "function" &&
-        playStream[key].stop();
+  callfile.exec("sh stop.sh", null, function (err, stdout, stderr) {
+    const date = new Date().getTime();
+    for (let key in playList) {
+      if (date - playList[key].date > timeout) {
+        delete playList[key];
+        if (playStream[key] && typeof playStream[key].stop == "function") {
+          playStream[key].stop();
+        }
+      }
     }
-  }
-}, 500);
+  });
+}, 1 * 1000);
