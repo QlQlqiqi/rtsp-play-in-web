@@ -4,6 +4,7 @@
     :id="id"
     @contextmenu.prevent="download"
     @click="startOrStop"
+    @click.middle="saveVideo"
   ></canvas>
 </template>
 
@@ -41,8 +42,7 @@ export default {
     this.buildWSConnection();
     this.sendHeartBeats();
   },
-  watch: {
-  },
+  watch: {},
   methods: {
     // 建立 ws 连接
     buildWSConnection() {
@@ -92,8 +92,7 @@ export default {
         canvas: this.canvas,
         audio: false,
         preserveDrawingBuffer: true,
-        onVideoDecode: (decoder, time) => {
-        },
+        onVideoDecode: (decoder, time) => {},
         videoBufferSize: 1024 * 1024 * 4,
         // audioBufferSize: 1024 * 1024 * 1,
       });
@@ -131,6 +130,23 @@ export default {
     startOrStop() {
       if (this.player.paused) this.player.play();
       else this.player.pause();
+    },
+    saveVideo() {
+      const stream = this.canvas.captureStream();
+      const recorder = new MediaRecorder(stream, { mimeType: "video/webm" });
+      const data = [];
+      recorder.ondataavailable = function (event) {
+        if (event.data && event.data.size) {
+          data.push(event.data);
+        }
+      };
+      recorder.onstop = () => {
+        saveAs(new Blob(data, { type: "video/webm" }), "1.mp4")
+      };
+      recorder.start();
+      setTimeout(() => {
+        recorder.stop();
+      }, 2000);
     },
   },
 };
