@@ -43,3 +43,10 @@ vue 构建 ```npm run serve```。
 ffmpeg -stream_loop -1 -re -i 1.mp4 -rtsp_transport tcp -vcodec h264 -f rtsp rtsp://localhost/test
 ```
 
+---
+
+上面是自己创建，
+
+可以直接打开 dist/index.html，输入如下数据
+
+<img src="https://i0.hdslb.com/bfs/album/72304b621eb04fda85a4d6a55eb5c98b728ca760.jpg">
