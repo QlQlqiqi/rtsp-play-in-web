@@ -1,26 +1,27 @@
 <template>
-  <!-- 左键暂停，右键下载图片 -->
-  <div
-    class="wrap"
-    @mouseenter="handleShowOption"
-    @mouseleave="handleHideOption"
-  >
+  <div class="wrap">
     <canvas
       :id="domId"
-      @contextmenu.prevent="download"
+      @contextmenu.prevent="handleShowOption"
       @click="startOrStop"
-      @click.middle="saveVideo"
     ></canvas>
     <div v-show="optionShow" class="option">
-      <input placeholder="rtsp URL: rtsp://ip/path" v-model="rtspData.url" />
-      <input
-        placeholder="server URL: http://ip/path"
-        v-model="rtspData.serverUrl"
-      />
-      <input placeholder="port: 9001" v-model="rtspData.port" />
-      <div class="button-wrap">
-        <button @click="handleChangeRtspData">enter</button>
-        <button @click="handleDeleteCanvas">delete</button>
+      <div class="left-wrap">
+        <input placeholder="rtsp URL: rtsp://ip/path" v-model="rtspData.url" />
+        <input
+          placeholder="server URL: http://ip:port"
+          v-model="rtspData.serverUrl"
+        />
+        <input placeholder="port: 9001" v-model="rtspData.port" />
+        <div class="button-wrap">
+          <button @click="handleChangeRtspData">enter</button>
+          <button @click="handleDeleteCanvas">delete</button>
+          <button @click="handleHideOption">cancel</button>
+        </div>
+      </div>
+      <div class="right-wrap">
+        <button @click="handleVideotape">videotape</button>
+        <button @click="handleScreenshot">screenshot</button>
       </div>
     </div>
   </div>
@@ -50,15 +51,7 @@ export default {
       rtspData: {},
     };
   },
-  watch: {
-    rtspData: function (newData) {
-      console.log("change rtspData");
-      // this.shutdown();
-      // this.buildWSConnection();
-      // this.inputValue = { ...this.rtspData };
-      // console.log(this.rtspData);
-    },
-  },
+  watch: {},
   computed: {
     domId: {
       get: function () {
@@ -72,8 +65,18 @@ export default {
   methods: {
     // 关闭
     shutdown() {
-      if (this.heartBeatsTimeId != -1) clearInterval(this.heartBeatsTimeId);
+      // 停止发送心跳包
+      this.heartBeatsTimeId != -1 && clearInterval(this.heartBeatsTimeId);
+      // 关闭 player 绘制
       this.player && this.player.destroy();
+      // 关闭录屏
+      if (this.isVideotape) {
+        this.videotapeRecorder.stop();
+        this.isVideotape = false;
+        delete this.videotapeData;
+        delete this.videotapeStream;
+        delete this.videotapeRecorder;
+      }
     },
     // 建立 ws 连接
     buildWSConnection() {
@@ -154,41 +157,62 @@ export default {
         });
       });
     },
-    download() {
+    handleScreenshot() {
       this.canvas.toBlob((blob) => {
         saveAs(blob, "1.jpg");
       });
     },
     startOrStop() {
+      if (!this.player) return;
       if (this.player.paused) this.player.play();
       else this.player.stop();
     },
-    saveVideo() {
-      const stream = this.canvas.captureStream();
-      const recorder = new MediaRecorder(stream, {
-        mimeType: "video/webm",
-        videoBitsPerSecond: 1024 * 1024 * 10,
-      });
-      const data = [];
-      recorder.ondataavailable = function (event) {
-        if (event.data && event.data.size) {
-          data.push(event.data);
-        }
-      };
-      recorder.onstop = () => {
-        saveAs(new Blob(data, { type: "video/webm " }), "1.mp4");
-      };
-      recorder.start();
-      setTimeout(() => {
-        recorder.stop();
-      }, 2000);
+    // 开始/结束录屏
+    handleVideotape() {
+      // 开始
+      if (!this.isVideotape) {
+        const stream = this.canvas.captureStream();
+        const recorder = new MediaRecorder(stream, {
+          mimeType: "video/webm",
+          videoBitsPerSecond: 1024 * 1024 * 10,
+        });
+        this.videotapeData = [];
+        recorder.ondataavailable = (event) => {
+          console.log(this.videotapeData);
+          if (event.data && event.data.size) {
+            this.videotapeData.push(event.data);
+          }
+        };
+        this.videotapeStream = stream;
+        this.videotapeRecorder = recorder;
+        this.isVideotape = true;
+        recorder.start();
+        console.log("start");
+      } else {
+        this.videotapeRecorder.onstop = () => {
+          saveAs(
+            new Blob(this.videotapeData, { type: "video/webm " }),
+            "1.mp4"
+          );
+          this.isVideotape = false;
+          delete this.videotapeData;
+          delete this.videotapeStream;
+          delete this.videotapeRecorder;
+        };
+        this.videotapeRecorder.stop();
+        console.log("end", this.videotapeData);
+      }
     },
     // 更改 rtspData
     handleChangeRtspData() {
-      this.rtspData.port = +this.rtspData.port;
+      this.rtspData.port = +this.rtspData.port || 9001;
+      this.rtspData.url = this.rtspData.url || "rtsp://localhost/test";
+      this.rtspData.serverUrl =
+        this.rtspData.serverUrl || "http://localhost:8088";
       this.shutdown();
       this.buildWSConnection();
       this.sendHeartBeats();
+      this.handleHideOption();
     },
     // 删除 canvas
     handleDeleteCanvas() {
@@ -209,32 +233,46 @@ export default {
 <style scoped lang="less">
 .wrap {
   position: relative;
-  height: 32vw;
-  width: 48vw;
-  padding: 1vw;
+  height: 100%;
+  width: auto;
+  margin: 1vw;
+  min-width: 25vw;
+  min-height: 16vw;
   canvas {
     height: 100%;
+    position: absolute;
     width: 100%;
     border: 0.3vw white solid;
     border-radius: 2vw;
     box-shadow: 0px 0px 1vw 0.3vw rgb(0 0 0 / 10%);
   }
   .option {
-    margin: 0 auto;
-    position: absolute;
-    top: 7vw;
-    left: 8vw;
-    height: 18vw;
-    width: 30vw;
+    padding: 2vw;
+    height: 100%;
     opacity: 0.6;
-    input,
-    .button-wrap {
-      height: 25%;
-      width: 100%;
-      display: flex;
-      button {
-        flex: 1;
+    display: flex;
+    width: 40vw;
+    .left-wrap {
+      flex: 3;
+      input {
+        height: 25%;
+        width: 80%;
+        margin: 0 auto;
+        display: block;
       }
+      .button-wrap {
+        height: 25%;
+        width: 80%;
+        margin: 0 auto;
+        display: flex;
+        button {
+          flex-grow: 1;
+        }
+      }
+    }
+
+    .right-wrap {
+      flex: 1;
     }
   }
 }

@@ -81,33 +81,15 @@ export default {
 
 <style scoped lang="less">
 #app {
-  // display: flex;
   justify-content: center;
 
   #left-wrap {
-    // flex: 5;
     height: 100%;
     display: flex;
-    justify-content: left;
+    justify-content: center;
     flex-wrap: wrap;
     align-items: flex-start;
     align-content: flex-start;
-    // .canvas-wrap {
-    //   flex: 1;
-    // }
-    // .add-wrap {
-    //   flex: 1;
-    // }
   }
-  // #right-wrap {
-  //   flex: 1;
-  //   height: 100%;
-  //   .button-wrap {
-  //     display: flex;
-  //     button {
-  //       flex: 1;
-  //     }
-  //   }
-  // }
 }
 </style>
