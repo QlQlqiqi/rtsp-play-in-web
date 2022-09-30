@@ -160,7 +160,7 @@ export default {
     handleScreenshot() {
       this.canvas.toBlob((blob) => {
         saveAs(blob, "1.jpg");
-      });
+      },"image/jpeg", 1);
     },
     startOrStop() {
       if (!this.player) return;
@@ -178,7 +178,6 @@ export default {
         });
         this.videotapeData = [];
         recorder.ondataavailable = (event) => {
-          console.log(this.videotapeData);
           if (event.data && event.data.size) {
             this.videotapeData.push(event.data);
           }
@@ -187,12 +186,11 @@ export default {
         this.videotapeRecorder = recorder;
         this.isVideotape = true;
         recorder.start();
-        console.log("start");
       } else {
         this.videotapeRecorder.onstop = () => {
           saveAs(
-            new Blob(this.videotapeData, { type: "video/webm " }),
-            "1.mp4"
+            new Blob(this.videotapeData, { type: "video/webm" }),
+            "1.webm"
           );
           this.isVideotape = false;
           delete this.videotapeData;
@@ -200,15 +198,14 @@ export default {
           delete this.videotapeRecorder;
         };
         this.videotapeRecorder.stop();
-        console.log("end", this.videotapeData);
       }
     },
     // 更改 rtspData
     handleChangeRtspData() {
       this.rtspData.port = +this.rtspData.port || 9001;
-      this.rtspData.url = this.rtspData.url || "rtsp://localhost/test";
+      this.rtspData.url = this.rtspData.url || "rtsp://121.196.168.210/test";
       this.rtspData.serverUrl =
-        this.rtspData.serverUrl || "http://localhost:8088";
+        this.rtspData.serverUrl || "http://121.196.168.210:8088";
       this.shutdown();
       this.buildWSConnection();
       this.sendHeartBeats();
