@@ -159,7 +159,7 @@ export default {
     },
     handleScreenshot() {
       this.canvas.toBlob((blob) => {
-        saveAs(blob, "1.jpg");
+        saveAs(blob, this.id + ".jpg");
       },"image/jpeg", 1);
     },
     startOrStop() {
@@ -190,7 +190,7 @@ export default {
         this.videotapeRecorder.onstop = () => {
           saveAs(
             new Blob(this.videotapeData, { type: "video/webm" }),
-            "1.webm"
+            this.id + ".webm"
           );
           this.isVideotape = false;
           delete this.videotapeData;
