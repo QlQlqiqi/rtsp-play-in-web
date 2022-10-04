@@ -31,6 +31,7 @@
 import $ from "jquery";
 import jsmpeg from "../../static/js/jsmpeg.js";
 import saveAs from "file-saver";
+import { getformatTime } from "@/util/util";
 
 export default {
   name: "CanvasShow",
@@ -158,9 +159,13 @@ export default {
       });
     },
     handleScreenshot() {
-      this.canvas.toBlob((blob) => {
-        saveAs(blob, this.id + ".jpg");
-      },"image/jpeg", 1);
+      this.canvas.toBlob(
+        (blob) => {
+          saveAs(blob, `${getformatTime()}_${this.id}.jpeg`);
+        },
+        "image/jpeg",
+        1
+      );
     },
     startOrStop() {
       if (!this.player) return;
@@ -190,7 +195,7 @@ export default {
         this.videotapeRecorder.onstop = () => {
           saveAs(
             new Blob(this.videotapeData, { type: "video/webm" }),
-            this.id + ".webm"
+            `${getformatTime()}_${this.id}.h264`
           );
           this.isVideotape = false;
           delete this.videotapeData;
