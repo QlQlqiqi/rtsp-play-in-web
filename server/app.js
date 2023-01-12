@@ -30,8 +30,8 @@ app.all("*", function (req, res, next) {
 });
 
 // 服务器 IP ，默认本地
-// const IP = "localhost";
-const IP = "121.196.168.210";
+const IP = "localhost";
+// const IP = "121.196.168.210";
 // 超时时间，一定时间没有接收到客户端心跳包，则认为已结束
 const timeout = 5 * 1000;
 // 当前正在播放的视频数据

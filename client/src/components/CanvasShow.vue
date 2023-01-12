@@ -27,7 +27,7 @@
   </div>
 </template>
 
-<script >
+<script>
 import $ from "jquery";
 import jsmpeg from "../../static/js/jsmpeg.js";
 import saveAs from "file-saver";
@@ -128,7 +128,8 @@ export default {
         audio: false,
         preserveDrawingBuffer: true,
         onVideoDecode: (decoder, time) => {},
-        videoBufferSize: 1024 * 1024 * 4,
+        // videoBufferSize: 1024 * 1024 * 4,
+        pauseWhenHidden: false,
         // audioBufferSize: 1024 * 1024 * 1,
       });
     },
@@ -179,7 +180,7 @@ export default {
         const stream = this.canvas.captureStream();
         const recorder = new MediaRecorder(stream, {
           mimeType: "video/webm",
-          videoBitsPerSecond: 1024 * 1024 * 10,
+          // videoBitsPerSecond: 1024 * 1024 * 10,
         });
         this.videotapeData = [];
         recorder.ondataavailable = (event) => {
@@ -192,6 +193,7 @@ export default {
         this.isVideotape = true;
         recorder.start();
       } else {
+        // 结束
         this.videotapeRecorder.onstop = () => {
           saveAs(
             new Blob(this.videotapeData, { type: "video/webm" }),
@@ -207,10 +209,13 @@ export default {
     },
     // 更改 rtspData
     handleChangeRtspData() {
+      // "121.196.168.210"
+      const defaultIp = "localhost";
       this.rtspData.port = +this.rtspData.port || 9001;
-      this.rtspData.url = this.rtspData.url || "rtsp://121.196.168.210/test";
+      this.rtspData.url = this.rtspData.url || "rtsp://" + defaultIp + "/test";
       this.rtspData.serverUrl =
-        this.rtspData.serverUrl || "http://121.196.168.210:8088";
+        this.rtspData.serverUrl || "http://" + defaultIp + ":8088";
+      console.log(this.rtspData);
       this.shutdown();
       this.buildWSConnection();
       this.sendHeartBeats();
